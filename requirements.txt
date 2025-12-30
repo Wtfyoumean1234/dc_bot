@@ -2,3 +2,4 @@ python-dotenv
 discord.py
 APScheduler
 psycopg2-binary
+aiohttp
