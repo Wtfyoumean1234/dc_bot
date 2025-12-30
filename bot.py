@@ -261,7 +261,7 @@ async def on_message(message:discord.Message):
     endtime=interval[usr_id]['endtime']
     curhr=datetime.now().hour
     if ((worktime>=endtime and (curhr>=worktime or curhr<=endtime)) or (worktime<endtime and (curhr>=worktime and curhr<=endtime))):
-        message.channel.send("去睡覺")
+        await message.channel.send("去睡覺")
         return
     if interval[usr_id]['anno']==True:
         interval[usr_id]['anno']=False
@@ -297,4 +297,5 @@ if __name__=='__main__':
             if conn is not None and not conn.closed:
                 conn.close()
         except:
+
             pass
