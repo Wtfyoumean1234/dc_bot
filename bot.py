@@ -1,5 +1,6 @@
 import os
 import random
+from zoneinfo import ZoneInfo
 from datetime import datetime,timedelta
 import discord
 from discord.ext import commands
@@ -14,6 +15,8 @@ db.init_db()
 
 intents=discord.Intents.all()
 bot=commands.Bot(command_prefix="/", intents=intents)
+
+TZ=ZoneInfo("Asia/Taipei")
 
 sche=AsyncIOScheduler(timezone="Asia/Taipei")
 
@@ -75,8 +78,8 @@ tuto="/print <msg,gap,slptime>\n" \
 
 async def notifyreset(sche,ctx):
     usr_id=ctx.author.id
-    runtime=datetime.now()+timedelta(hours=interval[usr_id]['hour'],minutes=interval[usr_id]['minute'])
-    curhr=datetime.now().hour
+    runtime=datetime.now(TZ)+timedelta(hours=interval[usr_id]['hour'],minutes=interval[usr_id]['minute'])
+    curhr=datetime.now(TZ).hour
     worktime=interval[usr_id]['worktime']
     endtime=interval[usr_id]['endtime']
     
@@ -87,7 +90,7 @@ async def notifyreset(sche,ctx):
     setsche(runtime,noti_id,notifyreset,[sche,ctx])
     if (worktime>=endtime and (curhr>=worktime or curhr<=endtime)) or (worktime<endtime and (curhr>=worktime and curhr<=endtime)):
         return
-    if not is_job_scheduled(sche,anno_id):setsche(datetime.now(),anno_id,frequent_message,[sche,ctx,0])
+    if not is_job_scheduled(sche,anno_id):setsche(datetime.now(TZ),anno_id,frequent_message,[sche,ctx,0])
 
 async def frequent_message(sche,ctx,count):
     usr_id=ctx.author.id
@@ -97,7 +100,7 @@ async def frequent_message(sche,ctx,count):
         return
     count+=1
     await ctx.send(f"{ctx.author.mention}{interval[usr_id]['notmsg']}")
-    runtime=datetime.now()+timedelta(seconds=1,milliseconds=500)
+    runtime=datetime.now(TZ)+timedelta(seconds=1,milliseconds=500)
     anno_id=f"{usr_id},annoy"
     setsche(runtime,anno_id,frequent_message,[sche,ctx,count])
 
@@ -168,7 +171,7 @@ async def stop(ctx,*sub:str):
         try:
             if sub[0]=="gap":
                 try:
-                    runtime=datetime.now()+timedelta(days=int(sub[1]),hours=int(sub[2]),minutes=int(sub[3]))
+                    runtime=datetime.now(TZ)+timedelta(days=int(sub[1]),hours=int(sub[2]),minutes=int(sub[3]))
                     if is_job_scheduled(sche,noti_id):sche.remove_job(noti_id)
                     if is_job_scheduled(sche,anno_id):sche.remove_job(anno_id)
                     setsche(runtime,sleep_id,notifyreset,[sche,ctx])
@@ -178,7 +181,7 @@ async def stop(ctx,*sub:str):
             elif sub[0]=="set":
                 try:
                     runtime=datetime(year=int(sub[1]),month=int(sub[2]),day=int(sub[3]),hour=int(sub[4]),minute=int(sub[5]))
-                    if runtime<datetime.now():
+                    if runtime<datetime.now(TZ):
                         reply_text="不可設過去的時間"
                     else:
                         setsche(runtime,sleep_id,notifyreset,[sche,ctx])
@@ -243,7 +246,7 @@ async def set(ctx,*sub:str):
 @bot.command(name="startnow")
 async def startnow(ctx,sub:str|None=None):
     usr_id=ctx.author.id
-    setsche(datetime.now(),f"{usr_id},notify",notifyreset,[sche,ctx])
+    setsche(datetime.now(TZ),f"{usr_id},notify",notifyreset,[sche,ctx])
 
 @bot.command(name="fuckurmom")
 async def fkmom(ctx,sub:str|None=None):
@@ -261,7 +264,7 @@ async def on_message(message:discord.Message):
         if usr_data is None:init_usr(usr_id)
     worktime=interval[usr_id]['worktime']
     endtime=interval[usr_id]['endtime']
-    curhr=datetime.now().hour
+    curhr=datetime.now(TZ).hour
     if ((worktime>=endtime and (curhr>=worktime or curhr<=endtime)) or (worktime<endtime and (curhr>=worktime and curhr<=endtime))):
         await message.channel.send("去睡覺")
         return
@@ -300,4 +303,3 @@ if __name__=='__main__':
                 conn.close()
         except:
             pass
-
