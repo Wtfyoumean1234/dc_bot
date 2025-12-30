@@ -314,8 +314,8 @@ async def clean():
 
 if __name__=='__main__':
     try:
-        bot.run(os.getenv("TOKEN"))
         asyncio.run(setup())
+        bot.run(os.getenv("TOKEN"))
     finally:
         try:
             asyncio.run(clean(runner))
@@ -328,3 +328,4 @@ if __name__=='__main__':
                 conn.close()
         except:
             pass
+
