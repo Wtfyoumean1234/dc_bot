@@ -297,5 +297,4 @@ if __name__=='__main__':
             if conn is not None and not conn.closed:
                 conn.close()
         except:
-
             pass
