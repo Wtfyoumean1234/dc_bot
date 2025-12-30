@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import db
+from aiohttp import web
 
 load_dotenv()
 
@@ -75,6 +76,17 @@ tuto="/print <msg,gap,slptime>\n" \
      "/startnow\n" \
      "提示計時現在結束" \
      ""
+
+async def handle_root():
+    return web.Response(text="機器運作中")
+
+def create_web_app():
+    app=web.Application()
+    app.router.add_get("/", handle_root)
+    return app
+
+app=create_web_app()
+runner=web.AppRunner(app)
 
 async def notifyreset(sche,ctx):
     usr_id=ctx.author.id
@@ -277,7 +289,7 @@ async def on_message(message:discord.Message):
         await bot.process_commands(message)
     else:
         await message.channel.send(talk3small[random.randint(0,len(talk3small)-1)])
-    
+
 @bot.event
 async def on_ready():
     print(f"已登入為 {bot.user} (ID: {bot.user.id})")
@@ -288,12 +300,25 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
         await ctx.send("非法指令，想知道可用指令請打/helpme")
 
+async def setup():
+    global runner
+    await runner.setup()
+    site=web.TCPSite(runner,"0.0.0.0",os.getenv("PORT"))
+    await site.start()
+    db.get_conn()
+    return runner
+
+async def clean():
+    global runner
+    await runner.cleanup()
+
 if __name__=='__main__':
     try:
-        db.get_conn()
         bot.run(os.getenv("TOKEN"))
+        asyncio.run(setup())
     finally:
         try:
+            asyncio.run(clean(runner))
             sche.shutdown(wait=False)
         except:
             pass
