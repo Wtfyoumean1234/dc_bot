@@ -303,7 +303,8 @@ async def on_command_error(ctx, error):
 async def setup():
     global runner
     await runner.setup()
-    site=web.TCPSite(runner,"0.0.0.0",os.getenv("PORT"))
+    port=os.getenv("PORT")
+    site=web.TCPSite(runner,"0.0.0.0",port)
     await site.start()
     db.get_conn()
     return runner
@@ -328,4 +329,5 @@ if __name__=='__main__':
                 conn.close()
         except:
             pass
+
 
