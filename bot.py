@@ -252,6 +252,8 @@ async def fkmom(ctx,sub:str|None=None):
 @bot.event
 async def on_message(message:discord.Message):
     global interval
+    if message.author==bot.user:
+        return
     usr_id=message.author.id
     if usr_id not in interval:
         usr_data=db.getdata(usr_id)
@@ -298,3 +300,4 @@ if __name__=='__main__':
                 conn.close()
         except:
             pass
+
