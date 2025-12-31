@@ -38,7 +38,7 @@ talk3small=["你腦霧吧",
             "喔咿咿阿依喔咿咿咿阿依",
             "ㄟㄟ快看那裏有個傻逼",
             "你知道把你女朋友形容成一把劍叫做看不劍",
-            "吃~~~雞~~~~雞~~~喔~~~~喔~~~喔~~~~~~~~~",
+            "吃~~~ 雞~~~~ 雞~~~ 喔~~~~ 喔~~~ 喔~~~~~~~~~",
             "麵框框超頂去吃它",
             "你知道把費米子轉一圈他的波函數會轉180度嗎?",
             "如果你餓了不吃東西，可以吃我屌",
@@ -73,9 +73,13 @@ tuto="/print <msg,gap,slptime>\n" \
      "設定提示詞\n" \
      "/set slptime <開始睡覺時間> <停止睡覺時間>\n" \
      "設定睡覺時間\n" \
+     "/set msgcnt <每次刷頻數>\n"\
+     "設定每次的刷頻數"\
      "/startnow\n" \
      "提示計時現在結束" \
      ""
+
+awaker_id=1455752417995002038
 
 async def handle_root():
     return web.Response(text="機器運作中")
@@ -106,7 +110,7 @@ async def notifyreset(sche,ctx):
 
 async def frequent_message(sche,ctx,count):
     usr_id=ctx.author.id
-    if not interval[usr_id]['anno'] or count>50:
+    if not interval[usr_id]['anno'] or count>interval[usr_id]['count']:
         interval[usr_id]['anno']=False
         db.change_partial_data(usr_id,{'anno':False})
         return
@@ -115,6 +119,12 @@ async def frequent_message(sche,ctx,count):
     runtime=datetime.now(TZ)+timedelta(seconds=1,milliseconds=500)
     anno_id=f"{usr_id},annoy"
     setsche(runtime,anno_id,frequent_message,[sche,ctx,count])
+
+async def awaker_nm(sche,ctx):
+    await ctx.send(".")
+    runtime=datetime.now(TZ)+timedelta(minutes=10)
+    anno_id=f"{awaker_id},annoy"
+    setsche(runtime,anno_id,awaker_nm,[sche,ctx])
 
 def is_job_scheduled(sche, job_id:str)->bool:
     job=sche.get_job(job_id)
@@ -136,7 +146,8 @@ def init_usr(usr_id):
         'notmsg':"去讀書拉小學生",
         'worktime':23,
         'endtime':8,
-        'anno':False
+        'anno':False,
+        'count':50
     }
     db.init_usr(usr_id,interval[usr_id])
 
@@ -201,7 +212,9 @@ async def stop(ctx,*sub:str):
                 except:
                     reply_text="參數錯誤，格式應為/stop set <年> <月> <天數> <小時> <分鐘>"
             elif sub[0]=="forever":
-                reply_text="你傻逼吧你真以為有這種功能喔"
+                if is_job_scheduled(sche,noti_id):sche.remove_job(noti_id)
+                if is_job_scheduled(sche,sleep_id):sche.remove_job(sleep_id)
+                reply_text="設定成功"
             else:
                 reply_text="參數錯誤，格式應為/stop <gap,set,forever>"
         except:
@@ -249,10 +262,17 @@ async def set(ctx,*sub:str):
                 reply_text="設定成功"
             except:
                 reply_text="參數錯誤，格式應為/set slptime <開始睡覺時間> <停止睡覺時間>"
+        elif sub[0]=="msgcnt":
+            try:
+                count=int(sub[1])
+                db.change_partial_data(usr_id,{"count":count})
+                reply_text="設定成功"
+            except:
+                reply_text="參數錯誤，格式應為/set msgcnt <每次刷頻數>"
         else:
-            reply_text="參數錯誤，格式應為/set <gap,msg,slptime>"
+            reply_text="參數錯誤，格式應為/set <gap,msg,slptime,msgcnt>"
     except:
-        reply_text="參數錯誤，格式應為/set <gap,msg,slptime>"
+        reply_text="參數錯誤，格式應為/set <gap,msg,slptime,msgcnt>"
     await ctx.send(reply_text)
 
 @bot.command(name="startnow")
@@ -266,14 +286,16 @@ async def fkmom(ctx,sub:str|None=None):
 
 @bot.event
 async def on_message(message:discord.Message):
+    if message.author==bot.user:return
     global interval
-    if message.author==bot.user:
-        return
     usr_id=message.author.id
     if usr_id not in interval:
         usr_data=db.getdata(usr_id)
-        interval[usr_id]=usr_data
         if usr_data is None:init_usr(usr_id)
+        else:interval[usr_id]=usr_data
+    if usr_id==awaker_id and not is_job_scheduled(sche,f"{awaker_id},annoy"):
+        setsche(datetime.now(TZ),f"{awaker_id},annoy",awaker_nm,[sche,message.author])
+        return
     worktime=interval[usr_id]['worktime']
     endtime=interval[usr_id]['endtime']
     curhr=datetime.now(TZ).hour
@@ -307,6 +329,9 @@ async def setup():
     site=web.TCPSite(runner,"0.0.0.0",port)
     await site.start()
     db.get_conn()
+    #cur=db._conn.cursor()
+    #cur.execute("DROP TABLE usr_interval")
+    #db._conn.commit()
     return runner
 
 async def clean():
@@ -329,6 +354,3 @@ if __name__=='__main__':
                 conn.close()
         except:
             pass
-
-
-
