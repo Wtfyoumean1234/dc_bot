@@ -6,9 +6,9 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 import asyncio
+from keepAlive import keep_alive
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import db
-from aiohttp import web
 
 load_dotenv()
 
@@ -59,7 +59,7 @@ talk3small=["你腦霧吧",
             "爸爸媽媽，你兒子在了解前列腺的事情啦",
             "彈幕一個觀眾說：台灣人文明的讓我受不了"]
 
-tuto="/print <msg,gap,slptime>\n" \
+tuto="/print <msg,gap,slptime,msgcnt>\n" \
      "輸出對應資訊\n" \
      "/stop gap <天數> <小時數> <分鐘數>\n" \
      "暫時停止bot煩，時間代表停止的間隔，過後便會馬上開始\n" \
@@ -80,17 +80,6 @@ tuto="/print <msg,gap,slptime>\n" \
      ""
 
 awaker_id=1455752417995002038
-
-async def handle_root():
-    return web.Response(text="機器運作中")
-
-def create_web_app():
-    app=web.Application()
-    app.router.add_get("/", handle_root)
-    return app
-
-app=create_web_app()
-runner=web.AppRunner(app)
 
 async def notifyreset(sche,ctx):
     usr_id=ctx.author.id
@@ -171,8 +160,10 @@ async def print_data(ctx,sub:str|None=None):
         reply_text=f"{interval[usr_id]['hour']}小時{interval[usr_id]['minute']}分鐘"
     elif sub=="slptime":
         reply_text=f"睡覺時間：{worktime}~{endtime}"
+    elif sub=="msgcnt":
+        reply_text=f"{interval[usr_id]['count']}次"
     else:
-        reply_text="參數錯誤，格式應為 /print <msg,gap,slptime>"
+        reply_text="參數錯誤，格式應為 /print <msg,gap,slptime,msgcnt>"
     await ctx.send(reply_text)
 
 @bot.command(name="stop")
@@ -322,29 +313,13 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
         await ctx.send("非法指令，想知道可用指令請打/helpme")
 
-async def setup():
-    global runner
-    await runner.setup()
-    port=int(os.getenv("PORT","10000"))
-    site=web.TCPSite(runner,"0.0.0.0",port)
-    await site.start()
-    db.get_conn()
-    #cur=db._conn.cursor()
-    #cur.execute("DROP TABLE usr_interval")
-    #db._conn.commit()
-    return runner
-
-async def clean():
-    global runner
-    await runner.cleanup()
-
 if __name__=='__main__':
     try:
-        asyncio.run(setup())
+        db.get_conn()
+        keep_alive()
         bot.run(os.getenv("TOKEN"))
     finally:
         try:
-            asyncio.run(clean(runner))
             sche.shutdown(wait=False)
         except:
             pass
