@@ -87,7 +87,6 @@ async def notifyreset(sche,ctx):
     curhr=datetime.now(TZ).hour
     worktime=interval[usr_id]['worktime']
     endtime=interval[usr_id]['endtime']
-    
     noti_id=f"{usr_id},notify"
     anno_id=f"{usr_id},annoy"
     interval[usr_id]['anno']=True
@@ -330,4 +329,5 @@ if __name__=='__main__':
                 conn.close()
         except:
             pass
+
 
