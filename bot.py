@@ -79,6 +79,8 @@ tuto="/print <msg,gap,slptime,msgcnt>\n" \
      "提示計時現在結束" \
      ""
 
+awaker_id=1455752417995002038
+
 async def notifyreset(sche,ctx):
     usr_id=ctx.author.id
     runtime=datetime.now(TZ)+timedelta(hours=interval[usr_id]['hour'],minutes=interval[usr_id]['minute'])
@@ -106,6 +108,12 @@ async def frequent_message(sche,ctx,count):
     runtime=datetime.now(TZ)+timedelta(seconds=1,milliseconds=500)
     anno_id=f"{usr_id},annoy"
     setsche(runtime,anno_id,frequent_message,[sche,ctx,count])
+
+async def awaker_nm(sche,ctx):
+    await ctx.send(".")
+    runtime=datetime.now(TZ)+timedelta(minutes=10)
+    anno_id=f"{awaker_id},annoy"
+    setsche(runtime,anno_id,awaker_nm,[sche,ctx])
 
 def is_job_scheduled(sche, job_id:str)->bool:
     job=sche.get_job(job_id)
@@ -250,8 +258,9 @@ async def set(ctx,*sub:str):
                 count=int(sub[1])
                 db.change_partial_data(usr_id,{"count":count})
                 reply_text="設定成功"
-            except:
+            except Exception as e:
                 reply_text="參數錯誤，格式應為/set msgcnt <每次刷頻數>"
+                reply_text=f"{e}"
         else:
             reply_text="參數錯誤，格式應為/set <gap,msg,slptime,msgcnt>"
     except:
@@ -276,6 +285,8 @@ async def on_message(message:discord.Message):
         usr_data=db.getdata(usr_id)
         if usr_data is None:init_usr(usr_id)
         else:interval[usr_id]=usr_data
+    if usr_id==awaker_id and not is_job_scheduled(sche,f"{awaker_id},annoy"):
+        setsche(datetime.now(TZ),f"{awaker_id},annoy",awaker_nm,[sche,message.author])
         return
     worktime=interval[usr_id]['worktime']
     endtime=interval[usr_id]['endtime']
