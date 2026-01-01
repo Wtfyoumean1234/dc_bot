@@ -194,7 +194,7 @@ async def stop(ctx,*sub:str):
                     reply_text="參數錯誤，格式應為/stop gap <天數> <小時數> <分鐘數>"
             elif sub[0]=="set":
                 try:
-                    runtime=datetime(year=int(sub[1]),month=int(sub[2]),day=int(sub[3]),hour=int(sub[4]),minute=int(sub[5]))
+                    runtime=datetime(year=int(sub[1]),month=int(sub[2]),day=int(sub[3]),hour=int(sub[4]),minute=int(sub[5]),tzinfo=TZ)
                     if runtime<datetime.now(TZ):
                         reply_text="不可設過去的時間"
                     else:
@@ -258,9 +258,8 @@ async def set(ctx,*sub:str):
                 count=int(sub[1])
                 db.change_partial_data(usr_id,{"count":count})
                 reply_text="設定成功"
-            except Exception as e:
+            except:
                 reply_text="參數錯誤，格式應為/set msgcnt <每次刷頻數>"
-                reply_text=f"{e}"
         else:
             reply_text="參數錯誤，格式應為/set <gap,msg,slptime,msgcnt>"
     except:
@@ -330,4 +329,3 @@ if __name__=='__main__':
                 conn.close()
         except:
             pass
-
