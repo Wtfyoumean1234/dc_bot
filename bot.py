@@ -74,7 +74,7 @@ tuto="/print <msg,gap,slptime,msgcnt>\n" \
      "/set slptime <開始睡覺時間> <停止睡覺時間>\n" \
      "設定睡覺時間\n" \
      "/set msgcnt <每次刷頻數>\n"\
-     "設定每次的刷頻數"\
+     "設定每次的刷頻數\n"\
      "/startnow\n" \
      "提示計時現在結束" \
      ""
@@ -330,3 +330,4 @@ if __name__=='__main__':
                 conn.close()
         except:
             pass
+
