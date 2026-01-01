@@ -79,7 +79,7 @@ tuto="/print <msg,gap,slptime,msgcnt>\n" \
      "提示計時現在結束" \
      ""
 
-awaker_id=1455752417995002038
+awaker_id=int(os.getenv("AWAKER_ID"))
 
 async def notifyreset(sche,ctx):
     usr_id=ctx.author.id
@@ -269,6 +269,7 @@ async def set(ctx,*sub:str):
 @bot.command(name="startnow")
 async def startnow(ctx,sub:str|None=None):
     usr_id=ctx.author.id
+    if is_job_scheduled(sche,f"{usr_id},notify"):await ctx.send("排程正在運作中")
     setsche(datetime.now(TZ),f"{usr_id},notify",notifyreset,[sche,ctx])
 
 @bot.command(name="fuckurmom")
@@ -329,3 +330,4 @@ if __name__=='__main__':
                 conn.close()
         except:
             pass
+
