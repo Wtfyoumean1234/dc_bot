@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ALLOWED_COLUMNS={"hour", "minute", "notmsg", "worktime", "endtime", "anno"}
+ALLOWED_COLUMNS={"hour", "minute", "notmsg", "worktime", "endtime", "anno", "count"}
 
 DB_URL = os.getenv("DATABASE_URL")
 
@@ -81,4 +81,5 @@ def change_all_data(usr_id,data:dict):
     cur=conn.cursor()
     cur.execute("UPDATE usr_interval SET hour=%(hour)s, minute=%(minute)s, notmsg=%(notmsg)s, worktime=%(worktime)s, endtime=%(endtime)s, anno=%(anno)s WHERE usr_id=%(usr_id)s",
                 {"usr_id":usr_id,**data})
+
     conn.commit()
